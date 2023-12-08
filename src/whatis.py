@@ -1,6 +1,4 @@
-# utils for everything
 
-# what ees this object
 def whatis(obj, recurse_if_length_less_than=8, spacing=1):
     printable=[int, float]
     
