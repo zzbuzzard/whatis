@@ -1,6 +1,6 @@
 # WhatIs package
 
-Gives a summary of any object, avoiding the risk of printing huge amounts to stdout.
+Gives a concise summary of any object's structure and avoids accidentally printing a huge object to stdout.
 
 Works with various libraries (NumPy, PyTorch etc.) via duck typing.
 
@@ -9,7 +9,7 @@ Works with various libraries (NumPy, PyTorch etc.) via duck typing.
 ```python
 >> x = list(enumerate(range(7,4129,3)))
 >> x
-# ... (very large output) ...
+# ... (veeery large output) ...
 >> whatis(x)
 list len=1374
   ├ tuple len=2
@@ -68,3 +68,11 @@ topk len=2
   └ Tensor shape=torch.Size([103, 5]) dtype=torch.int64 device=cpu
 >>
 ```
+
+## Usage
+```python
+from whatis import whatis
+```
+
+## Setup
+```pip install whatis```
