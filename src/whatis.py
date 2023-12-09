@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class AttrType(Enum):
-    DATA=0
-    FUNC=1
+    DATA = 0
+    FUNC = 1
 
 
 # Recurse into these types and display every element when length < recurse_if_length_less_than
@@ -51,14 +51,14 @@ def summarise(obj, display=False):
         for attr, attr_type in attr_grp:
             if attr in obj_attrs and callable(getattr(obj, attr)) == (attr_type == AttrType.FUNC):
                 value = getattr(obj, attr)
-                
+
                 if callable(value):
                     try:
                         value = value()
                     except:
                         # if fails for any reason, skip
                         continue
-                
+
                 name = _attr_name_map.get(attr, attr)
                 found_attrs.append(f"{name}={value}")
                 break
@@ -75,6 +75,7 @@ def _whatis(obj,
             hor_spacing=1,
             ver_spacing=1,
             show_index=False,
+            is_value_in_dict=False,
             display=True,
             pad="",
             endpad="",
@@ -82,7 +83,8 @@ def _whatis(obj,
             add_arrow=False,
             fst=False,
             index=None,
-            skip_top_pad=False):
+            skip_top_pad=False,
+            skip_btm_pad=False):
     rows = []
 
     def finish(row):
@@ -92,13 +94,13 @@ def _whatis(obj,
             rows.append(row)
         return rows
 
-    final_line_in_parent = is_last and not isinstance(obj, _iterate_types)
+    final_line_in_parent = is_last and not isinstance(obj, _iterate_types + _dict_types)
 
-    hor = _hor if unicode else " "
-    ver = _ver if unicode else " "
-    junc = _junction if unicode else ""
-    corner = _corner if unicode else ""
+    ver = _ver if unicode else "|"
+    junc = _junction if unicode else "-"
+    corner = _corner if unicode else "L"
     arrow = _arrow if unicode else "->"
+    key_start = _corner + _arrow if unicode else "->"
 
     summary = summarise(obj)
 
@@ -108,14 +110,22 @@ def _whatis(obj,
     if fst:
         line = summary
     else:
-        char = corner if final_line_in_parent else junc
         use_pad = endpad if final_line_in_parent else pad
-        line = use_pad + char + " " + summary
+        char = corner if final_line_in_parent else junc
+        if is_value_in_dict:
+            # line = [padding]│ └→ [summary]
+            line = use_pad + char + " " + key_start + " " + summary
+            # subsequent lines have additional padding
+        else:
+            # line = [padding]├ [summary]
+            line = use_pad + char + " " + summary
 
     if add_arrow:
         line = line + " " + arrow
 
-    if isinstance(obj, _iterate_types):
+    if isinstance(obj, _iterate_types + _dict_types):
+        is_dict = isinstance(obj, _dict_types)
+
         if fst:
             newpad = newendpad = " " * hor_spacing
         else:
@@ -125,8 +135,12 @@ def _whatis(obj,
             else:
                 newendpad = endpad + ver + " " * hor_spacing
 
+        if is_value_in_dict:
+            newpad = newpad + " "*4
+            newendpad = newendpad + " "*4
+
         length = len(obj)
-        
+
         if length < rec_len_limit:
             if not skip_top_pad:
                 for _ in range(ver_spacing):
@@ -134,27 +148,56 @@ def _whatis(obj,
             finish(line)
 
             last_was_iterable = False
-            
+
             for ind, i in enumerate(obj):
+                is_last = (ind == length - 1) and not is_dict
                 out = _whatis(i,
                               pad=newpad,
-                              endpad=newendpad if (ind == length-1) else newpad,
-                              is_last=(ind == length-1),
+                              endpad=newendpad if is_last else newpad,
+                              is_last=is_last,
                               rec_len_limit=rec_len_limit,
-                              index=ind,
-                              skip_top_pad=last_was_iterable or ind == 0,
+                              index=None if is_dict else ind,
+                              skip_top_pad=last_was_iterable or ind == 0 or is_dict,
+                              skip_btm_pad=is_last or is_dict,
                               unicode=unicode,
                               hor_spacing=hor_spacing,
                               ver_spacing=ver_spacing,
                               show_index=show_index,
                               display=display,
-                      )
+                              )
                 if not display:
                     rows += out
-                last_was_iterable = isinstance(i, _iterate_types)
-            if not fst and not is_last:
+
+                if is_dict:
+                    o = obj[i]
+                    is_last = (ind == length - 1)
+                    out = _whatis(o,
+                                  pad=newpad,
+                                  endpad=(newendpad if is_last else newpad),
+                                  is_last=is_last,
+                                  rec_len_limit=rec_len_limit,
+                                  index=None if is_dict else ind,
+                                  is_value_in_dict=True,
+                                  skip_top_pad=True,
+                                  skip_btm_pad=True,
+                                  unicode=unicode,
+                                  hor_spacing=hor_spacing,
+                                  ver_spacing=ver_spacing,
+                                  show_index=show_index,
+                                  display=display,
+                                  )
+                    if not display:
+                        rows += out
+
+                    if not is_last:
+                        finish(newpad + ver)
+
+                last_was_iterable = isinstance(i, _iterate_types + _dict_types)
+
+            if not skip_btm_pad:
                 for _ in range(ver_spacing):
                     finish(pad + ver)
+
         # Too long, display '...' on new line
         else:
             finish(line)
@@ -181,6 +224,7 @@ def whatis(obj,
                   show_index=show_index,
                   display=display,
                   fst=True,
-                  skip_top_pad=True)
+                  skip_top_pad=True,
+                  skip_btm_pad=True)
     if not display:
         return out
