@@ -6,7 +6,7 @@ class X:
 
 # (object, kwargs, output) groups
 objs = [
-([[1, 2], [3, 4]], {},
+([[1, 2], [3, 4]], {"hor_spacing": 1},
 """
 list len=2
  ├ list len=2
@@ -18,7 +18,7 @@ list len=2
  └ └ 4: int
 """
 ),
-({(1, 2): 2}, {},
+({(1, 2): 2}, {"hor_spacing": 1},
 """
 dict len=1
  ├ tuple len=2
@@ -27,19 +27,19 @@ dict len=1
  └ └→ 2: int
 """
 ),
-([{i:i for i in range(100)}], {},
+([{i:i for i in range(100)}], {"hor_spacing": 1},
 """
 list len=1
  ├ dict len=100
  └ └ ...
 """
 ),
-(X(), {},
+(X(), {"hor_spacing": 1},
 """
 X shape=banana
 """
 ),
-([(1, 5), {1: (2, 3), (4, 5): 6}, {3, 8}], {},
+([(1, 5), {1: (2, 3), (4, 5): 6}, {3, 8}], {"hor_spacing": 1},
 """
 list len=3
  ├ tuple len=2
@@ -85,7 +85,7 @@ list len=3
      └     └ 3: int
 """
 ),
-([(1, 5), {1: (2, 3), (4, 5): 6}, {3, 8}], {"unicode": False},
+([(1, 5), {1: (2, 3), (4, 5): 6}, {3, 8}], {"unicode": False, "hor_spacing": 1},
 """
 list len=3
  - tuple len=2
@@ -108,7 +108,7 @@ list len=3
  L L 3: int
 """
 ),
-([(1, 5), {1: (2, 3), (4, 5): 6}, {3, 8}], {"show_index": True},
+([(1, 5), {1: (2, 3), (4, 5): 6}, {3, 8}], {"show_index": True, "hor_spacing": 1},
 """
 list len=3
  ├ 0 → tuple len=2
@@ -131,7 +131,7 @@ list len=3
  └ └ 1 → 3: int
 """
 ),
-([{3:[1]*100},[1]*100], {},
+([{3:[1]*100},[1]*100], {"hor_spacing": 1},
 """
 list len=2
  ├ dict len=1
@@ -149,5 +149,12 @@ list len=2
 def test_examples():
     for index, (obj, kwargs, out) in enumerate(objs):
         out_real = "\n".join(whatis(obj, display=False, **kwargs))
-        assert out.strip() == out_real.strip(), f"Failed at index {index}, example starting with {out[:30]}!"
+        out = out.strip()
+        out_real = out_real.strip()
+        if out != out_real:
+            print("EXPECTED:")
+            print(out)
+            print("\nREAL:")
+            print(out_real)
+        assert out.strip() == out_real.strip(), f"Failed at index {index}"
 
