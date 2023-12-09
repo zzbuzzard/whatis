@@ -27,11 +27,23 @@ dict len=1
  └ └→ 2: int
 """
 ),
-([{i:i for i in range(100)}], {"hor_spacing": 1},
+([{i:i for i in range(100)}], {},
 """
 list len=1
- ├ dict len=100
- └ └ ...
+  ├ dict len=100
+  │  ├ 0: int
+  │  ├ └→ 0: int
+  │  │
+  │  ├ 1: int
+  │  ├ └→ 1: int
+  │  │
+  │  ├ 2: int
+  │  ├ └→ 2: int
+  │  │
+  │  ├ 3: int
+  │  ├ └→ 3: int
+  │  │
+  └  └ ...
 """
 ),
 (X(), {"hor_spacing": 1},
@@ -131,16 +143,42 @@ list len=3
  └ └ 1 → 3: int
 """
 ),
-([{3:[1]*100},[1]*100], {"hor_spacing": 1},
+([{3:[1]*100},[1]*100], {},
 """
 list len=2
- ├ dict len=1
- │ ├ 3: int
- │ ├ └→ list len=100
- │ └     └ ...
- │
- ├ list len=100
- └ └ ...
+  ├ dict len=1
+  │  ├ 3: int
+  │  ├ └→ list len=100
+  │  │      ├ 1: int
+  │  │      ├ 1: int
+  │  │      ├ 1: int
+  │  │      ├ 1: int
+  │  └      └ ...
+  │
+  ├ list len=100
+  │  ├ 1: int
+  │  ├ 1: int
+  │  ├ 1: int
+  │  ├ 1: int
+  └  └ ...
+"""
+),
+([{3:[1]*4},[1]*4], {"rec_len_limit": 4},
+"""
+list len=2
+  ├ dict len=1
+  │  ├ 3: int
+  │  ├ └→ list len=4
+  │  │      ├ 1: int
+  │  │      ├ 1: int
+  │  │      ├ 1: int
+  │  └      └ 1: int
+  │
+  ├ list len=4
+  │  ├ 1: int
+  │  ├ 1: int
+  │  ├ 1: int
+  └  └ 1: int
 """
 )
 ]

@@ -70,7 +70,7 @@ def summarise(obj, display=False):
 
 
 def _whatis(obj,
-            rec_len_limit=8,
+            rec_len_limit=4,
             unicode=True,
             hor_spacing=2,
             ver_spacing=1,
@@ -147,26 +147,48 @@ def _whatis(obj,
             newpad = newpad + " "*4
             newendpad = newendpad + " "*4
 
+        if not skip_top_pad:
+            for _ in range(ver_spacing):
+                finish(pad + ver)
+        finish(line)
+
+        last_was_iterable = False
+
         length = len(obj)
 
-        if length < rec_len_limit:
-            if not skip_top_pad:
-                for _ in range(ver_spacing):
-                    finish(pad + ver)
-            finish(line)
+        for ind, i in enumerate(obj):
+            if ind >= rec_len_limit:
+                break
+            is_last = (ind == length - 1) and not is_dict
+            out = _whatis(i,
+                          pad=newpad,
+                          endpad=newendpad if is_last else newpad,
+                          is_last=is_last,
+                          rec_len_limit=rec_len_limit,
+                          index=None if is_dict else ind,
+                          skip_top_pad=last_was_iterable or ind == 0 or is_dict,
+                          skip_btm_pad=is_last or is_dict,
+                          unicode=unicode,
+                          hor_spacing=hor_spacing,
+                          ver_spacing=ver_spacing,
+                          show_index=show_index,
+                          display=display,
+                          )
+            if not display:
+                rows += out
 
-            last_was_iterable = False
-
-            for ind, i in enumerate(obj):
-                is_last = (ind == length - 1) and not is_dict
-                out = _whatis(i,
+            if is_dict:
+                o = obj[i]
+                is_last = (ind == length - 1)
+                out = _whatis(o,
                               pad=newpad,
-                              endpad=newendpad if is_last else newpad,
+                              endpad=(newendpad if is_last else newpad),
                               is_last=is_last,
                               rec_len_limit=rec_len_limit,
                               index=None if is_dict else ind,
-                              skip_top_pad=last_was_iterable or ind == 0 or is_dict,
-                              skip_btm_pad=is_last or is_dict,
+                              is_value_in_dict=True,
+                              skip_top_pad=True,
+                              skip_btm_pad=True,
                               unicode=unicode,
                               hor_spacing=hor_spacing,
                               ver_spacing=ver_spacing,
@@ -176,40 +198,18 @@ def _whatis(obj,
                 if not display:
                     rows += out
 
-                if is_dict:
-                    o = obj[i]
-                    is_last = (ind == length - 1)
-                    out = _whatis(o,
-                                  pad=newpad,
-                                  endpad=(newendpad if is_last else newpad),
-                                  is_last=is_last,
-                                  rec_len_limit=rec_len_limit,
-                                  index=None if is_dict else ind,
-                                  is_value_in_dict=True,
-                                  skip_top_pad=True,
-                                  skip_btm_pad=True,
-                                  unicode=unicode,
-                                  hor_spacing=hor_spacing,
-                                  ver_spacing=ver_spacing,
-                                  show_index=show_index,
-                                  display=display,
-                                  )
-                    if not display:
-                        rows += out
+                if not is_last:
+                    finish(newpad + ver)
 
-                    if not is_last:
-                        finish(newpad + ver)
-
-                last_was_iterable = isinstance(i, _iterate_types + _dict_types)
-
-            if not skip_btm_pad:
-                for _ in range(ver_spacing):
-                    finish(pad + ver)
+            last_was_iterable = isinstance(i, _iterate_types + _dict_types)
 
         # Too long, display '...' on new line
-        else:
-            finish(line)
+        if length > rec_len_limit:
             finish(newendpad + (_corner if unicode else "-") + " ...")
+
+        if not skip_btm_pad:
+            for _ in range(ver_spacing):
+                finish(pad + ver)
     else:
         finish(line)
 
@@ -218,7 +218,7 @@ def _whatis(obj,
 
 
 def whatis(obj,
-           rec_len_limit: int = 8,
+           rec_len_limit: int = 4,
            unicode: bool = True,
            hor_spacing: int = 2,
            ver_spacing: int = 1,
@@ -227,7 +227,7 @@ def whatis(obj,
     """
     What is this object?
     @param obj: The object
-    @param rec_len_limit: Do not recurse into lists etc if their length exceeds this.
+    @param rec_len_limit: Do not look beyond this many elements in lists etc.
     @param unicode: Whether to use unicode characters.
     @param hor_spacing: Horizontal spacing (>=0).
     @param ver_spacing: Vertical spacing (>=0).
