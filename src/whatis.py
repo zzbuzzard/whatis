@@ -72,19 +72,30 @@ def summarise(obj, display=False):
 def _whatis(obj,
             rec_len_limit=8,
             unicode=True,
-            hor_spacing=1,
+            hor_spacing=2,
             ver_spacing=1,
             show_index=False,
-            is_value_in_dict=False,
             display=True,
+            is_value_in_dict=False,
             pad="",
             endpad="",
             is_last=False,
-            add_arrow=False,
             fst=False,
             index=None,
             skip_top_pad=False,
             skip_btm_pad=False):
+    """
+    Internal function; see `whatis` below for missing docs.
+    @param is_value_in_dict: Is this object a value in a dictionary?
+    @param pad: String to left pad with. For '│ ├ set len=2', we would have pad='│ ' (note no '├').
+    @param endpad: String to left pad with on the final line of this object e.g. pad='│ └'.
+    @param is_last: Is this the last element in my parent's iterator?
+    @param fst: Are we at depth=0 i.e. no parent obj?
+    @param index: Index in parent iterator (or None for dicts).
+    @param skip_top_pad: Iterators pad top/btm before printing - this removes top padding.
+    @param skip_btm_pad: Iterators pad top/btm before printing - this removes bottom padding.
+    @return:
+    """
     rows = []
 
     def finish(row):
@@ -119,9 +130,6 @@ def _whatis(obj,
         else:
             # line = [padding]├ [summary]
             line = use_pad + char + " " + summary
-
-    if add_arrow:
-        line = line + " " + arrow
 
     if isinstance(obj, _iterate_types + _dict_types):
         is_dict = isinstance(obj, _dict_types)
@@ -210,12 +218,24 @@ def _whatis(obj,
 
 
 def whatis(obj,
-           rec_len_limit=8,
-           unicode=True,
-           hor_spacing=1,
-           ver_spacing=1,
-           show_index=False,
-           display=True):
+           rec_len_limit: int = 8,
+           unicode: bool = True,
+           hor_spacing: int = 2,
+           ver_spacing: int = 1,
+           show_index: bool = False,
+           display: bool = True):
+    """
+    What is this object?
+    @param obj: The object
+    @param rec_len_limit: Do not recurse into lists etc if their length exceeds this.
+    @param unicode: Whether to use unicode characters.
+    @param hor_spacing: Horizontal spacing (>=0).
+    @param ver_spacing: Vertical spacing (>=0).
+    @param show_index: Whether to show the index of each item in a list.
+    @param display: If set to False, returns a list of lines rather than printing to stdout. Useful for testing mainly.
+    """
+    assert hor_spacing >= 0
+    assert ver_spacing >= 0
     out = _whatis(obj,
                   rec_len_limit=rec_len_limit,
                   unicode=unicode,
